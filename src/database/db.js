@@ -25,6 +25,7 @@ export const getGoals = async (callback) => {
   }
 };
 
+
 // Eliminar objetivo
 export const removeGoal = async (id) => {
   try {
@@ -38,28 +39,42 @@ export const removeGoal = async (id) => {
 };
 
 // Actualizar objetivos (corregido para recibir solo parámetros específicos)
-export const updateGoal = async (id, title, description, deadline, subGoals) => {
+export const updateGoal = async ({ id, title, description, timeUnit, timeAmount, subGoals }) => {
   try {
     const goals = JSON.parse(await AsyncStorage.getItem('goals')) || [];
     const updatedGoals = goals.map((goal) =>
       goal.id === id
-        ? { ...goal, title, description, deadline, subGoals }
+        ? {
+            ...goal,
+            title,
+            description,
+            timeUnit,
+            timeAmount,
+            subGoals: Array.isArray(subGoals) ? subGoals : [], // Garantiza consistencia
+          }
         : goal
     );
     await AsyncStorage.setItem('goals', JSON.stringify(updatedGoals));
-    console.log('Objetivo actualizado:', { id, title, description, deadline, subGoals });
+    console.log('Objetivo actualizado:', { id, title, description });
   } catch (error) {
     console.error('Error al actualizar objetivo:', error);
   }
 };
+
+
 
 // Obtener un objetivo por ID
 export const getGoalById = async (id) => {
   try {
     const goals = JSON.parse(await AsyncStorage.getItem('goals')) || [];
     const goal = goals.find((goal) => goal.id === id);
-    return goal || null;
+    return {
+      ...goal,
+      subGoals: Array.isArray(goal.subGoals) ? goal.subGoals : [], // Asegúrate de que sea un arreglo
+    };
   } catch (error) {
-    console.error('Error al obtener objetivo por ID:', error);
+    console.error('Error al obtener el objetivo:', error);
+    return null;
   }
 };
+
