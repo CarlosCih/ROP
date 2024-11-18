@@ -6,7 +6,7 @@ import { insertGoal } from '../database/db';
 export default function GoalScreen({ navigation }) {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [timeUnit, setTimeUnit] = useState(null); // Unidad de tiempo: semanas, meses, años
+    const [timeUnit, setTimeUnit] = useState(''); // Cadena vacía como valor inicial
     const [timeAmount, setTimeAmount] = useState(''); // Cantidad: 1, 2, 3...
     const [subGoals, setSubGoals] = useState([]); // Lista de subobjetivos
     const [newSubGoal, setNewSubGoal] = useState('');
@@ -38,7 +38,7 @@ export default function GoalScreen({ navigation }) {
     );
 
     const saveGoal = useCallback(async () => {
-        if (!title.trim() || !description.trim()) {
+        if (!title.trim() || !description.trim() || !timeUnit) {
             alert('Por favor, completa todos los campos.');
             return;
         }
@@ -46,7 +46,8 @@ export default function GoalScreen({ navigation }) {
         await insertGoal(title, description, deadline, subGoals);
         alert('¡Objetivo guardado con éxito!');
         navigation.goBack();
-    }, [title, description, subGoals, calculateDeadline, navigation]);
+    }, [title, description, timeUnit, subGoals, calculateDeadline, navigation]);
+    
 
     return (
         <View style={styles.container}>
@@ -74,10 +75,12 @@ export default function GoalScreen({ navigation }) {
                         { label: 'Meses', value: 'months' },
                         { label: 'Años', value: 'years' },
                     ]}
-                    placeholder={{ label: 'Seleccionar unidad', value: null }}
+                    placeholder={{ label: 'Seleccionar unidad', value: '' }} // Usa una cadena vacía
+                    value={timeUnit || ''} // Usa una cadena vacía para evitar `null`
                     style={pickerSelectStyles}
-                    useNativeAndroidPickerStyle={false} // Permite aplicar estilos personalizados en Android
+                    useNativeAndroidPickerStyle={false}
                 />
+
             </View>
             <InputField label="Subobjetivos:" value={newSubGoal} onChangeText={setNewSubGoal} placeholder="Ejemplo: Terminar capítulo 1" />
             <TouchableOpacity style={styles.addSubGoalButton} onPress={addSubGoal}>

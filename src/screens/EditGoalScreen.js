@@ -7,7 +7,7 @@ export default function EditGoalScreen({ route, navigation }) {
   const { goalId } = route.params;
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [timeUnit, setTimeUnit] = useState(null);
+  const [timeUnit, setTimeUnit] = useState(''); // Usa una cadena vacía como valor inicial
   const [timeAmount, setTimeAmount] = useState('');
   const [subGoals, setSubGoals] = useState([]);
   const [newSubGoal, setNewSubGoal] = useState('');
@@ -41,29 +41,41 @@ export default function EditGoalScreen({ route, navigation }) {
     setSubGoals((prev) => prev.filter((subGoal) => subGoal.id !== id));
   };
 
+  const calculateDeadline = () => {
+    if (!timeUnit || !timeAmount) return null;
+    const currentDate = new Date();
+    const finalDate = new Date(currentDate);
+
+    const timeMapping = {
+      weeks: () => finalDate.setDate(currentDate.getDate() + parseInt(timeAmount) * 7),
+      months: () => finalDate.setMonth(currentDate.getMonth() + parseInt(timeAmount)),
+      years: () => finalDate.setFullYear(currentDate.getFullYear() + parseInt(timeAmount)),
+    };
+
+    timeMapping[timeUnit]?.();
+    return finalDate.toISOString(); // Asegúrate de almacenar la fecha en un formato estándar
+  };
+
   const saveChanges = async () => {
     if (!title.trim() || !description.trim()) {
       alert('Por favor, completa todos los campos.');
       return;
     }
 
+    const deadline = calculateDeadline();
+
     const updatedGoal = {
       id: goalId,
       title,
       description,
-      timeUnit,
-      timeAmount: parseInt(timeAmount) || null,
+      deadline,
       subGoals,
     };
 
-    try {
-      await updateGoal(updatedGoal);
-      alert('¡Objetivo actualizado con éxito!');
-      navigation.goBack();
-    } catch (error) {
-      console.error('Error al guardar los cambios:', error);
-      alert('Error al guardar los cambios. Por favor, intenta de nuevo.');
-    }
+    console.log('Datos para actualizar:', updatedGoal);
+    await updateGoal(updatedGoal);
+    alert('¡Objetivo actualizado con éxito!');
+    navigation.goBack();
   };
 
   if (loading) {
@@ -103,12 +115,16 @@ export default function EditGoalScreen({ route, navigation }) {
           placeholder="Cantidad"
         />
         <View style={styles.pickerContainer}>
-          <Picker selectedValue={timeUnit} onValueChange={(itemValue) => setTimeUnit(itemValue)}>
-            <Picker.Item label="Seleccionar unidad" value={null} />
+          <Picker
+            selectedValue={timeUnit || ''}
+            onValueChange={(itemValue) => setTimeUnit(itemValue)}
+          >
+            <Picker.Item label="Seleccionar unidad" value="" />
             <Picker.Item label="Semanas" value="weeks" />
             <Picker.Item label="Meses" value="months" />
             <Picker.Item label="Años" value="years" />
           </Picker>
+
         </View>
       </View>
 

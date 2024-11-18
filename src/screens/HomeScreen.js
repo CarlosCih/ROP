@@ -45,6 +45,7 @@ export default function HomeScreen({ navigation }) {
               <Text style={styles.goalDeadline}>
                 Fecha Límite: {item.deadline ? new Date(item.deadline).toLocaleDateString() : 'No definida'}
               </Text>
+
               <Text style={styles.goalSubGoals}>
                 Subobjetivos: {item.subGoals ? item.subGoals.length : 0}
               </Text>
@@ -99,7 +100,7 @@ const styles = StyleSheet.create({
   buttonRow: {
     flexDirection: 'column',
     alignItems: 'flex-end',
-    gap:10,
+    gap: 10,
   },
   button: {
     width: 70,
