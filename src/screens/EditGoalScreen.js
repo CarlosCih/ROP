@@ -17,10 +17,11 @@ export default function EditGoalScreen({ route, navigation }) {
     const loadGoal = async () => {
       try {
         const goal = await getGoalById(goalId);
+        console.log('Datos cargados:', goal); // Debugging
         setTitle(goal?.title || '');
         setDescription(goal?.description || '');
-        setTimeUnit(goal?.timeUnit || null);
-        setTimeAmount(goal?.timeAmount?.toString() || '');
+        setTimeUnit(goal?.timeUnit || ''); // Predeterminado a cadena vacía
+        setTimeAmount(goal?.timeAmount?.toString() || ''); // Convertir cantidad a cadena
         setSubGoals(Array.isArray(goal?.subGoals) ? goal.subGoals : []);
         setLoading(false);
       } catch (error) {
@@ -42,7 +43,10 @@ export default function EditGoalScreen({ route, navigation }) {
   };
 
   const calculateDeadline = () => {
-    if (!timeUnit || !timeAmount) return null;
+    if (!timeUnit || !timeAmount) {
+      console.log('No se pudo calcular el deadline: Falta timeUnit o timeAmount');
+      return null;
+    }
     const currentDate = new Date();
     const finalDate = new Date(currentDate);
 
@@ -53,10 +57,13 @@ export default function EditGoalScreen({ route, navigation }) {
     };
 
     timeMapping[timeUnit]?.();
-    return finalDate.toISOString(); // Asegúrate de almacenar la fecha en un formato estándar
+    console.log('Deadline calculado:', finalDate.toISOString()); // Debugging
+    return finalDate.toISOString();
   };
 
   const saveChanges = async () => {
+    console.log('Valores antes de guardar:', { title, description, timeUnit, timeAmount }); // Debugging
+
     if (!title.trim() || !description.trim()) {
       alert('Por favor, completa todos los campos.');
       return;
@@ -69,10 +76,13 @@ export default function EditGoalScreen({ route, navigation }) {
       title,
       description,
       deadline,
+      timeUnit, // Incluye la unidad de tiempo seleccionada
+      timeAmount: parseInt(timeAmount) || null, // Guarda la cantidad de tiempo como número
       subGoals,
     };
 
-    console.log('Datos para actualizar:', updatedGoal);
+    console.log('Datos para actualizar:', updatedGoal); // Debugging
+
     await updateGoal(updatedGoal);
     alert('¡Objetivo actualizado con éxito!');
     navigation.goBack();
@@ -116,7 +126,7 @@ export default function EditGoalScreen({ route, navigation }) {
         />
         <View style={styles.pickerContainer}>
           <Picker
-            selectedValue={timeUnit || ''}
+            selectedValue={timeUnit}
             onValueChange={(itemValue) => setTimeUnit(itemValue)}
           >
             <Picker.Item label="Seleccionar unidad" value="" />
@@ -124,7 +134,6 @@ export default function EditGoalScreen({ route, navigation }) {
             <Picker.Item label="Meses" value="months" />
             <Picker.Item label="Años" value="years" />
           </Picker>
-
         </View>
       </View>
 
