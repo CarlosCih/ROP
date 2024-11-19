@@ -7,7 +7,7 @@ export default function EditGoalScreen({ route, navigation }) {
   const { goalId } = route.params;
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [timeUnit, setTimeUnit] = useState(''); // Usa una cadena vacía como valor inicial
+  const [timeUnit, setTimeUnit] = useState('');
   const [timeAmount, setTimeAmount] = useState('');
   const [subGoals, setSubGoals] = useState([]);
   const [newSubGoal, setNewSubGoal] = useState('');
@@ -17,18 +17,46 @@ export default function EditGoalScreen({ route, navigation }) {
     const loadGoal = async () => {
       try {
         const goal = await getGoalById(goalId);
-        console.log('Datos cargados:', goal); // Debugging
         setTitle(goal?.title || '');
         setDescription(goal?.description || '');
-        setTimeUnit(goal?.timeUnit || ''); // Predeterminado a cadena vacía
-        setTimeAmount(goal?.timeAmount?.toString() || ''); // Convertir cantidad a cadena
         setSubGoals(Array.isArray(goal?.subGoals) ? goal.subGoals : []);
+
+        if (goal?.timeUnit && goal?.timeAmount) {
+          setTimeUnit(goal.timeUnit);
+          setTimeAmount(goal.timeAmount.toString());
+        } else if (goal?.deadline) {
+          calculateTimeFromDeadline(new Date(goal.deadline));
+        }
+
         setLoading(false);
       } catch (error) {
         console.error('Error al cargar el objetivo:', error);
         setLoading(false);
       }
     };
+
+    const calculateTimeFromDeadline = (deadlineDate) => {
+      const currentDate = new Date();
+      const diffInMilliseconds = deadlineDate - currentDate;
+
+      if (diffInMilliseconds > 0) {
+        const diffInDays = Math.ceil(diffInMilliseconds / (1000 * 60 * 60 * 24));
+        if (diffInDays % 7 === 0) {
+          setTimeUnit('weeks');
+          setTimeAmount((diffInDays / 7).toString());
+        } else if (diffInDays % 30 === 0) {
+          setTimeUnit('months');
+          setTimeAmount((diffInDays / 30).toString());
+        } else if (diffInDays % 365 === 0) {
+          setTimeUnit('years');
+          setTimeAmount((diffInDays / 365).toString());
+        } else {
+          setTimeUnit('');
+          setTimeAmount(diffInDays.toString());
+        }
+      }
+    };
+
     loadGoal();
   }, [goalId]);
 
@@ -43,27 +71,23 @@ export default function EditGoalScreen({ route, navigation }) {
   };
 
   const calculateDeadline = () => {
-    if (!timeUnit || !timeAmount) {
-      console.log('No se pudo calcular el deadline: Falta timeUnit o timeAmount');
-      return null;
-    }
+    if (!timeUnit || !timeAmount) return null;
     const currentDate = new Date();
     const finalDate = new Date(currentDate);
 
     const timeMapping = {
+      days: () => finalDate.setDate(currentDate.getDate() + parseInt(timeAmount)), // Cálculo para días
       weeks: () => finalDate.setDate(currentDate.getDate() + parseInt(timeAmount) * 7),
       months: () => finalDate.setMonth(currentDate.getMonth() + parseInt(timeAmount)),
       years: () => finalDate.setFullYear(currentDate.getFullYear() + parseInt(timeAmount)),
     };
 
     timeMapping[timeUnit]?.();
-    console.log('Deadline calculado:', finalDate.toISOString()); // Debugging
     return finalDate.toISOString();
   };
 
-  const saveChanges = async () => {
-    console.log('Valores antes de guardar:', { title, description, timeUnit, timeAmount }); // Debugging
 
+  const saveChanges = async () => {
     if (!title.trim() || !description.trim()) {
       alert('Por favor, completa todos los campos.');
       return;
@@ -76,12 +100,10 @@ export default function EditGoalScreen({ route, navigation }) {
       title,
       description,
       deadline,
-      timeUnit, // Incluye la unidad de tiempo seleccionada
-      timeAmount: parseInt(timeAmount) || null, // Guarda la cantidad de tiempo como número
+      timeUnit,
+      timeAmount: parseInt(timeAmount) || null,
       subGoals,
     };
-
-    console.log('Datos para actualizar:', updatedGoal); // Debugging
 
     await updateGoal(updatedGoal);
     alert('¡Objetivo actualizado con éxito!');
@@ -130,6 +152,7 @@ export default function EditGoalScreen({ route, navigation }) {
             onValueChange={(itemValue) => setTimeUnit(itemValue)}
           >
             <Picker.Item label="Seleccionar unidad" value="" />
+            <Picker.Item label="Días" value="days" />
             <Picker.Item label="Semanas" value="weeks" />
             <Picker.Item label="Meses" value="months" />
             <Picker.Item label="Años" value="years" />
@@ -223,7 +246,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 6,
     alignItems: 'center',
-    width: '80%',
+    width: '60%',
     marginBottom: 15,
   },
   addSubGoalButtonText: {
@@ -236,7 +259,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 6,
     alignItems: 'center',
-    width: '80%',
+    width: '60%',
     marginTop: 20,
   },
   saveButtonText: {

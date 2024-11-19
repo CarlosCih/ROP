@@ -6,28 +6,30 @@ import { insertGoal } from '../database/db';
 export default function GoalScreen({ navigation }) {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [timeUnit, setTimeUnit] = useState(''); // Cadena vacía como valor inicial
-    const [timeAmount, setTimeAmount] = useState(''); // Cantidad: 1, 2, 3...
+    const [timeUnit, setTimeUnit] = useState(''); // Unidad de tiempo (semana, mes, año)
+    const [timeAmount, setTimeAmount] = useState(''); // Cantidad de tiempo (1, 2, 3...)
     const [subGoals, setSubGoals] = useState([]); // Lista de subobjetivos
-    const [newSubGoal, setNewSubGoal] = useState('');
+    const [newSubGoal, setNewSubGoal] = useState(''); // Nuevo subobjetivo a agregar
 
     const calculateDeadline = useCallback(() => {
-        if (!timeUnit || !timeAmount) return null;
+        if (!timeUnit || !timeAmount) return null; // Si falta información, no calcula
         const currentDate = new Date();
         const finalDate = new Date(currentDate);
 
         const timeMapping = {
+            days: () => finalDate.setDate(currentDate.getDate() + parseInt(timeAmount)), // Cálculo para días
             weeks: () => finalDate.setDate(currentDate.getDate() + parseInt(timeAmount) * 7),
             months: () => finalDate.setMonth(currentDate.getMonth() + parseInt(timeAmount)),
             years: () => finalDate.setFullYear(currentDate.getFullYear() + parseInt(timeAmount)),
         };
 
-        timeMapping[timeUnit]?.();
+        timeMapping[timeUnit]?.(); // Aplica la transformación según la unidad seleccionada
         return finalDate;
     }, [timeUnit, timeAmount]);
 
+
     const addSubGoal = useCallback(() => {
-        if (!newSubGoal.trim()) return;
+        if (!newSubGoal.trim()) return; // Evita agregar subobjetivos vacíos
         setSubGoals((prev) => [...prev, { id: Date.now(), title: newSubGoal }]);
         setNewSubGoal('');
     }, [newSubGoal]);
@@ -43,15 +45,22 @@ export default function GoalScreen({ navigation }) {
             return;
         }
         const deadline = calculateDeadline();
-        await insertGoal(title, description, deadline, subGoals);
+        await insertGoal(
+            title,
+            description,
+            deadline ? deadline.toISOString() : null, // Guarda la fecha límite en formato ISO
+            subGoals
+        );
         alert('¡Objetivo guardado con éxito!');
         navigation.goBack();
     }, [title, description, timeUnit, subGoals, calculateDeadline, navigation]);
-    
 
     return (
         <View style={styles.container}>
+            {/* Campo para el título del objetivo */}
             <InputField label="Título del Objetivo:" value={title} onChangeText={setTitle} placeholder="Ejemplo: Leer un libro" />
+
+            {/* Campo para la descripción */}
             <InputField
                 label="Descripción:"
                 value={description}
@@ -59,6 +68,8 @@ export default function GoalScreen({ navigation }) {
                 placeholder="Ejemplo: Leer 50 páginas al día"
                 multiline
             />
+
+            {/* Campo para tiempo */}
             <Text style={styles.label}>Establecer Tiempo para Completar (Opcional):</Text>
             <View style={styles.timePickerContainer}>
                 <TextInput
@@ -71,17 +82,20 @@ export default function GoalScreen({ navigation }) {
                 <RNPickerSelect
                     onValueChange={(value) => setTimeUnit(value)}
                     items={[
+                        { label: 'Días', value: 'days' }, // Nueva opción
                         { label: 'Semanas', value: 'weeks' },
                         { label: 'Meses', value: 'months' },
                         { label: 'Años', value: 'years' },
                     ]}
-                    placeholder={{ label: 'Seleccionar unidad', value: '' }} // Usa una cadena vacía
-                    value={timeUnit || ''} // Usa una cadena vacía para evitar `null`
+                    placeholder={{ label: 'Seleccionar unidad', value: '' }}
+                    value={timeUnit || ''}
                     style={pickerSelectStyles}
                     useNativeAndroidPickerStyle={false}
                 />
 
             </View>
+
+            {/* Subobjetivos */}
             <InputField label="Subobjetivos:" value={newSubGoal} onChangeText={setNewSubGoal} placeholder="Ejemplo: Terminar capítulo 1" />
             <TouchableOpacity style={styles.addSubGoalButton} onPress={addSubGoal}>
                 <Text style={styles.addSubGoalButtonText}>Añadir Subobjetivo</Text>
@@ -92,16 +106,11 @@ export default function GoalScreen({ navigation }) {
                 renderItem={({ item }) => (
                     <SubGoalItem title={item.title} onDelete={() => removeSubGoal(item.id)} />
                 )}
-                contentContainerStyle={{
-                    paddingBottom: 20, // Espacio adicional si se necesita
-                }}
-                style={{
-                    flexGrow: 0, // Evita que ocupe espacio adicional
-                    width: '80%', // Ajusta al ancho necesario
-                    marginBottom: 10, // Espaciado debajo de la lista
-                }}
+                contentContainerStyle={{ paddingBottom: 20 }}
+                style={{ flexGrow: 0, width: '80%', marginBottom: 10 }}
             />
 
+            {/* Botón para guardar */}
             <TouchableOpacity style={styles.saveButton} onPress={saveGoal}>
                 <Text style={styles.saveButtonText}>Guardar Objetivo</Text>
             </TouchableOpacity>
@@ -109,6 +118,7 @@ export default function GoalScreen({ navigation }) {
     );
 }
 
+// Componente reutilizable para entradas de texto
 const InputField = ({ label, ...props }) => (
     <>
         <Text style={styles.label}>{label}</Text>
@@ -116,6 +126,7 @@ const InputField = ({ label, ...props }) => (
     </>
 );
 
+// Componente reutilizable para mostrar subobjetivos
 const SubGoalItem = React.memo(({ title, onDelete }) => (
     <View style={styles.subGoalItem}>
         <Text>{title}</Text>
@@ -125,9 +136,10 @@ const SubGoalItem = React.memo(({ title, onDelete }) => (
     </View>
 ));
 
+// Estilos
 const styles = StyleSheet.create({
     container: {
-        flexGrow: 1, // Permite que el contenido crezca dinámicamente
+        flexGrow: 1,
         padding: 20,
         alignItems: 'center',
         justifyContent: 'flex-start',
@@ -184,12 +196,7 @@ const styles = StyleSheet.create({
         borderRadius: 6,
         alignItems: 'center',
         width: '20%',
-        marginTop: 20, // Ajusta el espacio superior
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 5,
-        elevation: 3,
+        marginTop: 20,
     },
     saveButtonText: {
         color: '#fff',
@@ -208,7 +215,7 @@ const styles = StyleSheet.create({
     },
 });
 
-
+// Estilos específicos del selector
 const pickerSelectStyles = StyleSheet.create({
     inputIOS: {
         fontSize: 16,

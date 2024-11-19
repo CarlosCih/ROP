@@ -42,6 +42,7 @@ export default function HomeScreen({ navigation }) {
           renderItem={({ item }) => (
             <View style={styles.goalItem}>
               <Text style={styles.goalTitle}>{item.title}</Text>
+              <Text style={styles.goalTitle}>{item.title}</Text>
               <Text style={styles.goalDeadline}>
                 Fecha Límite: {item.deadline ? new Date(item.deadline).toLocaleDateString() : 'No definida'}
               </Text>
