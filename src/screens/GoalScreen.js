@@ -48,12 +48,15 @@ export default function GoalScreen({ navigation }) {
         await insertGoal(
             title,
             description,
-            deadline ? deadline.toISOString() : null, // Guarda la fecha límite en formato ISO
-            subGoals
+            deadline ? deadline.toISOString() : null, // Fecha límite en formato ISO
+            subGoals,
+            timeUnit, // Asegura guardar la unidad de tiempo
+            timeAmount // Asegura guardar la cantidad de tiempo
         );
         alert('¡Objetivo guardado con éxito!');
         navigation.goBack();
-    }, [title, description, timeUnit, subGoals, calculateDeadline, navigation]);
+    }, [title, description, timeUnit, timeAmount, subGoals, calculateDeadline, navigation]);
+    
 
     return (
         <View style={styles.container}>

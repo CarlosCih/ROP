@@ -1,24 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { updateGoal, getGoalById } from '../database/db';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import { updateGoal, getGoalById } from "../database/db";
 
 export default function EditGoalScreen({ route, navigation }) {
   const { goalId } = route.params;
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [timeUnit, setTimeUnit] = useState('');
-  const [timeAmount, setTimeAmount] = useState('');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [timeUnit, setTimeUnit] = useState("");
+  const [timeAmount, setTimeAmount] = useState("");
   const [subGoals, setSubGoals] = useState([]);
-  const [newSubGoal, setNewSubGoal] = useState('');
+  const [newSubGoal, setNewSubGoal] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadGoal = async () => {
       try {
         const goal = await getGoalById(goalId);
-        setTitle(goal?.title || '');
-        setDescription(goal?.description || '');
+        setTitle(goal?.title || "");
+        setDescription(goal?.description || "");
         setSubGoals(Array.isArray(goal?.subGoals) ? goal.subGoals : []);
 
         if (goal?.timeUnit && goal?.timeAmount) {
@@ -30,7 +37,7 @@ export default function EditGoalScreen({ route, navigation }) {
 
         setLoading(false);
       } catch (error) {
-        console.error('Error al cargar el objetivo:', error);
+        console.error("Error al cargar el objetivo:", error);
         setLoading(false);
       }
     };
@@ -40,18 +47,20 @@ export default function EditGoalScreen({ route, navigation }) {
       const diffInMilliseconds = deadlineDate - currentDate;
 
       if (diffInMilliseconds > 0) {
-        const diffInDays = Math.ceil(diffInMilliseconds / (1000 * 60 * 60 * 24));
+        const diffInDays = Math.ceil(
+          diffInMilliseconds / (1000 * 60 * 60 * 24)
+        );
         if (diffInDays % 7 === 0) {
-          setTimeUnit('weeks');
+          setTimeUnit("weeks");
           setTimeAmount((diffInDays / 7).toString());
         } else if (diffInDays % 30 === 0) {
-          setTimeUnit('months');
+          setTimeUnit("months");
           setTimeAmount((diffInDays / 30).toString());
         } else if (diffInDays % 365 === 0) {
-          setTimeUnit('years');
+          setTimeUnit("years");
           setTimeAmount((diffInDays / 365).toString());
         } else {
-          setTimeUnit('');
+          setTimeUnit("");
           setTimeAmount(diffInDays.toString());
         }
       }
@@ -63,7 +72,7 @@ export default function EditGoalScreen({ route, navigation }) {
   const addSubGoal = () => {
     if (!newSubGoal.trim()) return;
     setSubGoals((prev) => [...prev, { id: Date.now(), title: newSubGoal }]);
-    setNewSubGoal('');
+    setNewSubGoal("");
   };
 
   const removeSubGoal = (id) => {
@@ -76,20 +85,23 @@ export default function EditGoalScreen({ route, navigation }) {
     const finalDate = new Date(currentDate);
 
     const timeMapping = {
-      days: () => finalDate.setDate(currentDate.getDate() + parseInt(timeAmount)), // Cálculo para días
-      weeks: () => finalDate.setDate(currentDate.getDate() + parseInt(timeAmount) * 7),
-      months: () => finalDate.setMonth(currentDate.getMonth() + parseInt(timeAmount)),
-      years: () => finalDate.setFullYear(currentDate.getFullYear() + parseInt(timeAmount)),
+      days: () =>
+        finalDate.setDate(currentDate.getDate() + parseInt(timeAmount)), // Cálculo para días
+      weeks: () =>
+        finalDate.setDate(currentDate.getDate() + parseInt(timeAmount) * 7),
+      months: () =>
+        finalDate.setMonth(currentDate.getMonth() + parseInt(timeAmount)),
+      years: () =>
+        finalDate.setFullYear(currentDate.getFullYear() + parseInt(timeAmount)),
     };
 
     timeMapping[timeUnit]?.();
     return finalDate.toISOString();
   };
 
-
   const saveChanges = async () => {
     if (!title.trim() || !description.trim()) {
-      alert('Por favor, completa todos los campos.');
+      alert("Por favor, completa todos los campos.");
       return;
     }
 
@@ -106,7 +118,7 @@ export default function EditGoalScreen({ route, navigation }) {
     };
 
     await updateGoal(updatedGoal);
-    alert('¡Objetivo actualizado con éxito!');
+    alert("¡Objetivo actualizado con éxito!");
     navigation.goBack();
   };
 
@@ -137,7 +149,9 @@ export default function EditGoalScreen({ route, navigation }) {
         multiline
       />
 
-      <Text style={styles.label}>Establecer Tiempo para Completar (Opcional):</Text>
+      <Text style={styles.label}>
+        Establecer Tiempo para Completar (Opcional):
+      </Text>
       <View style={styles.timePickerContainer}>
         <TextInput
           style={styles.timeInput}
@@ -148,8 +162,8 @@ export default function EditGoalScreen({ route, navigation }) {
         />
         <View style={styles.pickerContainer}>
           <Picker
-            selectedValue={timeUnit}
-            onValueChange={(itemValue) => setTimeUnit(itemValue)}
+            selectedValue={timeUnit || ""} // Asegura que siempre tenga un valor predeterminado
+            onValueChange={(itemValue) => setTimeUnit(itemValue)} // Actualiza el estado con la selección
           >
             <Picker.Item label="Seleccionar unidad" value="" />
             <Picker.Item label="Días" value="days" />
@@ -183,7 +197,7 @@ export default function EditGoalScreen({ route, navigation }) {
           </View>
         )}
         contentContainerStyle={{ paddingBottom: 20 }}
-        style={{ flexGrow: 0, width: '80%', marginBottom: 10 }}
+        style={{ flexGrow: 0, width: "80%", marginBottom: 10 }}
       />
 
       <TouchableOpacity style={styles.saveButton} onPress={saveChanges}>
@@ -197,97 +211,97 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
+    alignItems: "center",
+    justifyContent: "flex-start",
   },
   label: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 5,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     fontSize: 16,
-    color: '#333',
-    marginLeft: '10%',
+    color: "#333",
+    marginLeft: "10%",
   },
   input: {
-    width: '80%',
+    width: "80%",
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     padding: 8,
     marginBottom: 15,
     borderRadius: 6,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
   },
   timePickerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 15,
-    width: '80%',
+    width: "80%",
   },
   timeInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     padding: 8,
     borderRadius: 6,
     marginRight: 10,
     fontSize: 14,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
   },
   pickerContainer: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 6,
-    overflow: 'hidden',
-    backgroundColor: '#f9f9f9',
+    overflow: "hidden",
+    backgroundColor: "#f9f9f9",
   },
   addSubGoalButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: "#007bff",
     paddingVertical: 10,
     borderRadius: 6,
-    alignItems: 'center',
-    width: '60%',
+    alignItems: "center",
+    width: "60%",
     marginBottom: 15,
   },
   addSubGoalButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: 14,
   },
   saveButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: "#28a745",
     paddingVertical: 12,
     borderRadius: 6,
-    alignItems: 'center',
-    width: '60%',
+    alignItems: "center",
+    width: "60%",
     marginTop: 20,
   },
   saveButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: 14,
   },
   subGoalItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderColor: '#ccc',
-    width: '80%',
+    borderColor: "#ccc",
+    width: "80%",
     marginBottom: 8,
   },
   removeSubGoalText: {
-    color: 'red',
-    fontWeight: 'bold',
+    color: "red",
+    fontWeight: "bold",
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     fontSize: 18,
-    color: '#555',
+    color: "#555",
   },
 });

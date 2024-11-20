@@ -100,3 +100,20 @@ export const markGoalAsCompleted = async (id) => {
     console.error('Error al marcar objetivo como completado:', error);
   }
 };
+
+export const getGoalById = async (id) => {
+  try {
+    const goals = JSON.parse(await AsyncStorage.getItem('goals')) || [];
+    const goal = goals.find((goal) => goal.id === id);
+    console.log('Objetivo recuperado por ID:', goal); // Verificar datos recuperados
+    return {
+      ...goal,
+      timeUnit: goal?.timeUnit || '', // Valor predeterminado si no está
+      timeAmount: goal?.timeAmount?.toString() || '', // Convertir a cadena
+      subGoals: Array.isArray(goal?.subGoals) ? goal.subGoals : [], // Asegurar que sea un array
+    };
+  } catch (error) {
+    console.error('Error al obtener objetivo por ID:', error);
+    return null;
+  }
+};
