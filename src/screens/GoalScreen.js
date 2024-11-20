@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 6,
         alignItems: 'center',
-        width: '20%',
+        width: '60%',
         marginBottom: 15,
     },
     addSubGoalButtonText: {
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderRadius: 6,
         alignItems: 'center',
-        width: '20%',
+        width: '60%',
         marginTop: 20,
     },
     saveButtonText: {
